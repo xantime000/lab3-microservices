@@ -1,0 +1,5 @@
+fastapi>=0.100.0
+uvicorn>=0.20.0
+strawberry-graphql[fastapi]>=0.300.0
+httpx>=0.25.0
+pydantic>=2.0.0
