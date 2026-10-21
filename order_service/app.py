@@ -77,8 +77,10 @@ def health():
     tags=["Orders"]
 )
 def get_orders(userId: Optional[str] = Query(None, description="ID пользователя")):
-    if userId:
-        return [o for o in orders_db if o["userId"] == str(userId)]
+    if userId is not None and str(userId).strip():
+        uid = str(userId).strip()
+        matched = [o for o in orders_db if str(o["userId"]).strip() == uid]
+        return matched
     return orders_db
 
 
