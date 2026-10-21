@@ -149,6 +149,12 @@ class Query:
         return orders_list
 
 
+try:
+    from .ide import get_ide_html
+except ImportError:
+    from ide import get_ide_html
+
+
 # ============================================================
 # 4. СОЗДАНИЕ СХЕМЫ И FASTAPI ПРИЛОЖЕНИЯ
 # ============================================================
@@ -164,11 +170,19 @@ async def get_context():
     }
 
 
-# Подключаем GraphQLRouter со встроенным GraphiQL (Playground) по пути /graphql
-graphql_app = GraphQLRouter(
+class StandaloneGraphQLRouter(GraphQLRouter):
+    """
+    Автономный роутер со встроенным GraphQL Playground без внешних CDN.
+    Исключает зависание на 'Loading...' при закрытом или медленном доступе к unpkg.com.
+    """
+    async def render_graphql_ide(self, request) -> HTMLResponse:
+        return HTMLResponse(get_ide_html())
+
+
+# Подключаем GraphQLRouter со встроенным надежным Playground по пути /graphql
+graphql_app = StandaloneGraphQLRouter(
     schema,
-    context_getter=get_context,
-    graphql_ide="graphiql"
+    context_getter=get_context
 )
 
 app = FastAPI(
@@ -178,6 +192,11 @@ app = FastAPI(
 )
 
 app.include_router(graphql_app, prefix="/graphql")
+
+
+@app.get("/playground", response_class=HTMLResponse, include_in_schema=False)
+def playground_page():
+    return HTMLResponse(get_ide_html())
 
 
 @app.get("/health")
